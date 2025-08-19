@@ -36,6 +36,8 @@ Route::group(["middleware"=>"guest", "prefix" => "admin", "as"=>"admin."],functi
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
+    // Difference between store and create is that store handles the form submission for resetting the password, while create displays the form to reset the password.
+
 });
 
 Route::middleware('auth')->group(function () {
