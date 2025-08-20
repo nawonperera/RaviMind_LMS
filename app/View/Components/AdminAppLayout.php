@@ -12,6 +12,6 @@ class AdminAppLayout extends Component
      */
     public function render(): View
     {
-        return view('layouts.admin-app.app');
+        return view('layouts.admin-app');
     }
 }
