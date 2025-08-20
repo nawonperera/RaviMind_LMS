@@ -13,7 +13,7 @@ use App\Http\Controllers\Admin\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
-Route::group(["middleware" => "guest", "prefix" => "admin", "as" => "admin."], function () {
+Route::group(["middleware" => "guest:admin", "prefix" => "admin", "as" => "admin."], function () {
     // "guest" means these routes are accessible only to users who are not logged in.
 
     Route::get('register', [RegisteredUserController::class, 'create'])
@@ -41,8 +41,9 @@ Route::group(["middleware" => "guest", "prefix" => "admin", "as" => "admin."], f
 
 });
 
-Route::middleware('auth')->group(function () {
-    // "auth" means these routes are accessible only to logged-in users.
+Route::group(["middleware" => "auth:admin", "prefix" => "admin", "as" => "admin."], function () {
+    // "middleware('auth')"----> auth middleware give access to the following routes only to authenticated users.
+    // "auth:admin" means these routes are accessible only to users who are logged in as admins.
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 
