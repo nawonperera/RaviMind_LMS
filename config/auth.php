@@ -7,39 +7,32 @@ return [
     | Authentication Defaults
     |--------------------------------------------------------------------------
     |
-    | This option defines the default authentication "guard" and password
-    | reset "broker" for your application. You may change these values
-    | as required, but they're a perfect start for most applications.
+    | These values determine the default guard and password broker (reset
+    | settings) that the framework will use when no explicit guard/broker
+    | is specified. They pull values from the environment (.env) if set,
+    | otherwise they fall back to the provided defaults.
     |
     */
 
     'defaults' => [
-    // 'guard' decides how users are logged in (session, token, etc.)
-    // env('AUTH_GUARD', 'web') means:
-    // → check if AUTH_GUARD is defined in .env file
-    // → if yes, use that value
-    // → if not, use "web" as default
-    'guard' => env('AUTH_GUARD', 'web'),
+        // 'guard' selects which authentication guard to use by default.
+        // env('AUTH_GUARD', 'web') => return value of AUTH_GUARD from .env,
+        // otherwise use 'web'.
+        // Example guards: 'web' (session/cookie), 'api' (token), 'admin', etc.
+        'guard' => env('AUTH_GUARD', 'web'),
 
-    // 'passwords' decides which password reset settings to use
-    // env('AUTH_PASSWORD_BROKER', 'users') means:
-    // → check if AUTH_PASSWORD_BROKER is defined in .env file
-    // → if yes, use that value
-    // → if not, use "users" as default
-    'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
-],
-    /* Explanation in simple terms:
-    | Example of guards:
-    | "web" guard = uses session & cookies for login (normal websites)
-    | "api" guard = uses tokens for login (API authentication)
-
-    | Example of passwords:
-    | "users" = password reset rules for normal users
-    | "admins" = password reset rules for admins (if defined)
-
-    | In short:
-    | guard → how login works
-    | passwords → how password reset works
+        // 'passwords' selects the default password broker configuration
+        // used for password resets. This key must match an entry in
+        // the 'passwords' array below (commonly 'users' or 'admins').
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+    ],
+    /*
+    | Quick summary:
+    | - guard -> how users are authenticated (session, token, third-party)
+    | - passwords -> which password reset configuration to use by default
+    |
+    | env($key, $default) reads the value from the .env file (if present).
+    | If the .env value is missing, it returns the $default provided.
     */
 
 
@@ -48,47 +41,41 @@ return [
     | Authentication Guards
     |--------------------------------------------------------------------------
     |
-    | Next, you may define every authentication guard for your application.
-    | Of course, a great default configuration has been defined for you
-    | which utilizes session storage plus the Eloquent user provider.
+    | Guards define how users are authenticated for each request. A guard
+    | maps a request to a user provider (below) and specifies the mechanism
+    | used to maintain the authentication state (driver).
     |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
-    |
-    | Supported: "session"
+    | Typical drivers: 'session' (web apps using cookies/sessions),
+    | 'token' (simple API tokens), or other drivers provided by packages
+    | like 'passport' or 'sanctum'.
     |
     */
 
     'guards' => [
-    // "web" guard setup
-    'web' => [
-        // "driver" defines how login is handled
-        // "session" means use sessions & cookies (for normal web apps)
-        'driver' => 'session',
+        // Default web guard (for regular website users)
+        'web' => [
+            // Use session/cookie based authentication
+            'driver' => 'session',
 
-        // "provider" tells which user table/model to use
-        // here "users" provider → uses users table/model
-        'provider' => 'users',
+            // Use the 'users' provider defined in 'providers' below.
+            'provider' => 'users',
+        ],
+
+        // Additional guard for admins (separates admin authentication)
+        'admin' => [
+            // Also session-based here — admins will be authenticated via sessions
+            'driver' => 'session',
+
+            // Use the 'admins' provider (configured below) so Laravel will
+            // look for admin records instead of normal users.
+            'provider' => 'admins',
+        ],
     ],
-
-    // "admin" guard setup
-    'admin' => [
-        // still using "session" driver (same as web)
-        // but could be different if needed (like "token" for APIs)
-        'driver' => 'session',
-
-        // this time it uses "admins" provider
-        // meaning login will check the "admins" table/model instead of "users"
-        'provider' => 'admins',
-    ],
-],
     /*
-    | Explanation in simple terms:
-    | - Guards = how login works for each user type (web users, admins, API users, etc.)
-    | - You can create many guards if you have different kinds of users
-    | - "driver" = method of authentication (session = cookies, token = API tokens)
-    | - "provider" = which database table/model is used to fetch the user
+    | Notes:
+    | - You can add as many guards as you need (e.g., API guards, admin guards).
+    | - A guard refers to a provider; the provider defines where/how to
+    |   retrieve the user record (Eloquent model, DB table, etc.).
     */
 
 
@@ -97,56 +84,51 @@ return [
     | User Providers
     |--------------------------------------------------------------------------
     |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
+    | Providers define how to fetch users from storage. You can use Eloquent
+    | models or raw database queries. Multiple providers allow multiple
+    | user tables/models (e.g., users, admins, customers).
     |
-    | If you have multiple user tables or models you may configure multiple
-    | providers to represent the model / table. These providers may then
-    | be assigned to any extra authentication guards you have defined.
-    |
-    | Supported: "database", "eloquent"
+    | Supported drivers (by default): 'eloquent', 'database'.
     |
     */
 
     'providers' => [
-        // "users" provider
+        // Provider used for regular users
         'users' => [
-            // "driver" tells how to fetch user data from DB
-            // "eloquent" means use Eloquent ORM with a model
+            // 'eloquent' means Laravel will use an Eloquent model to fetch users
             'driver' => 'eloquent',
 
-            // "model" tells which Eloquent model represents this provider
-            // env('AUTH_MODEL', App\Models\User::class) means:
-            // → check .env for AUTH_MODEL
-            // → if not found, use App\Models\User by default
+            // The model class that represents users. env('AUTH_MODEL', ...)
+            // lets you override the model from .env if needed; otherwise
+            // it defaults to App\Models\User::class.
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
-        // "admins" provider
+        // Provider used for admins
         'admins' => [
-            // still using "eloquent" driver
             'driver' => 'eloquent',
 
-            // but this time using the Admin model
-            // so Laravel will fetch data from "admins" table via App\Models\Admin
+            // NOTE: This file uses env('AUTH_MODEL', App\Models\Admin::class)
+            // for the Admin model. That re-uses the same AUTH_MODEL env key
+            // as the users provider. Usually you want different env keys
+            // (or hardcode different classes), for example:
+            //   'model' => env('AUTH_ADMIN_MODEL', App\Models\Admin::class)
+            // Otherwise both providers may end up using the same model.
             'model' => env('AUTH_MODEL', App\Models\Admin::class),
         ],
 
-
-        // Alternative way (using database driver directly without models)
-        // Example: fetch from "users" table directly instead of using a model
+        // Alternative (commented-out) approach: use the 'database' driver
+        // to query a table directly without an Eloquent model:
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
-],
+    ],
     /*
-    |  Explanation:
-    | - Providers = how to fetch user records from DB
-    | - "eloquent" driver = uses Eloquent models (recommended way)
-    | - "database" driver = direct DB query without a model
-    | - Providers are linked with guards (guard → provider → model/table)
+    | Quick notes:
+    | - 'eloquent' provider expects a model class and uses Eloquent to fetch users.
+    | - 'database' provider expects a table name and runs direct DB queries.
+    | - Providers are referenced by guards to know where to load users from.
     */
 
 
@@ -155,65 +137,55 @@ return [
     | Resetting Passwords
     |--------------------------------------------------------------------------
     |
-    | These configuration options specify the behavior of Laravel's password
-    | reset functionality, including the table utilized for token storage
-    | and the user provider that is invoked to actually retrieve users.
+    | Configuration for password reset tokens. Each key under 'passwords'
+    | represents a password broker for a particular user/provider type.
+    | It defines which provider to use, which table stores tokens, token
+    | expiration, and throttle limits.
     |
-    | The expiry time is the number of minutes that each reset token will be
-    | considered valid. This security feature keeps tokens short-lived so
-    | they have less time to be guessed. You may change this as needed.
-    |
-    | The throttle setting is the number of seconds a user must wait before
-    | generating more password reset tokens. This prevents the user from
-    | quickly generating a very large amount of password reset tokens.
+    | 'expire' is in minutes (how long a reset token is valid).
+    | 'throttle' is in seconds (how long to wait between successive requests).
     |
     */
 
     'passwords' => [
-    // Password reset settings for normal users
-    'users' => [
-        // "provider" must match one of the providers defined above
-        // here → it uses the "users" provider (App\Models\User)
-        'provider' => 'users',
+        // Password reset config for normal users
+        'users' => [
+            // Must match a provider defined above
+            'provider' => 'users',
 
-        // "table" stores password reset tokens
-        // env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens') means:
-        // → check .env for AUTH_PASSWORD_RESET_TOKEN_TABLE
-        // → if not found, use "password_reset_tokens" by default
-        'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            // Table that stores password reset tokens. You can change the
+            // table name via .env if needed.
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
 
-        // "expire" is how many minutes the reset token is valid
-        // here = 60 minutes (1 hour)
-        'expire' => 60,
+            // How many minutes the reset token is valid for (e.g., 60 = 1 hour).
+            'expire' => 60,
 
-        // "throttle" is how many minutes a user must wait 
-        // before requesting another reset link
-        'throttle' => 60,
+            // How many seconds a user must wait before requesting another
+            // password reset token. Default here is 60 seconds.
+            // NOTE: Some comments earlier say "minutes" — that is incorrect.
+            'throttle' => 60,
+        ],
+
+        // Password reset config for admins
+        'admins' => [
+            // Use the admins provider so admin accounts use this broker
+            'provider' => 'admins',
+
+            // You can use the same token table or a different one if you want
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+
+            // Token lifetime in minutes
+            'expire' => 60,
+
+            // Throttle in seconds
+            'throttle' => 60,
+        ],
     ],
-
-    // Password reset settings for admins
-    'admins' => [
-        // uses the "admins" provider (App\Models\Admin)
-        'provider' => 'admins',
-
-        // same table for reset tokens (could also be different if needed)
-        'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-
-        // token valid for 60 minutes
-        'expire' => 60,
-
-        // new request allowed after 60 minutes
-        'throttle' => 60,
-    ],
-],
     /*
-    |  Explanation in simple words:
-    | - "passwords" defines how password reset works for each user type
-    | - You can have separate reset settings for different guards (users, admins, etc.)
-    | - "provider" → which user group to reset (linked to providers above)
-    | - "table" → where reset tokens are stored
-    | - "expire" → token lifetime
-    | - "throttle" → waiting time between reset requests
+    | Summary:
+    | - You can have separate reset settings (tokens/lifetimes) per user type.
+    | - 'expire' → minutes (token lifetime)
+    | - 'throttle' → seconds (wait time between requests)
     */
 
 
@@ -222,22 +194,21 @@ return [
     | Password Confirmation Timeout
     |--------------------------------------------------------------------------
     |
-    | Here you may define the number of seconds before a password confirmation
-    | window expires and users are asked to re-enter their password via the
-    | confirmation screen. By default, the timeout lasts for three hours.
+    | Defines how many seconds a user remains "recently confirmed" after
+    | entering their password for sensitive actions (like changing email,
+    | deleting account). After this time they must re-enter their password.
     |
     */
 
+    // Read from .env (AUTH_PASSWORD_TIMEOUT) or default to 10800 seconds (3 hours).
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
-    // This setting controls how long (in seconds) a user can stay authenticated
-    // before being asked to re-enter their password for sensitive actions
-    // Example: updating profile, changing email, deleting account, etc.
-
-    // env('AUTH_PASSWORD_TIMEOUT', 10800) means:
-    // → check .env for AUTH_PASSWORD_TIMEOUT
-    // → if not found, default = 10800 seconds (3 hours)
-
-    // 10800 seconds = 60 * 60 * 3 = 3 hours
+    /*
+    | Example: 10800 seconds = 3 hours.
+    |
+    | This setting is used by the "password.confirm" middleware to require
+    | users to re-enter their password for sensitive operations after the
+    | configured timeout.
+    */
 
 ];
