@@ -75,7 +75,7 @@ class RedirectIfAuthenticated
      * @param  callable  $redirectToCallback
      * @return void
      */
-    public static function redirectUsing(callable $redirectToCallback)
+    public static function redirectUsing(callable $redirectToCallback): void
     {
         static::$redirectToCallback = $redirectToCallback;
     }
