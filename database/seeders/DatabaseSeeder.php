@@ -13,8 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            AdminSeeder::class, // Seed the AdminSeeder to create an admin user
-        ]);
+        //$this->call(AdminSeeder::class); // Seed the AdminSeeder to create an admin user
+        $this->call(UserSeeder::class);  // Seed the UserSeeder to create instructor and student users)
     }
 }
