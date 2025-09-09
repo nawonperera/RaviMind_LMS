@@ -28,9 +28,11 @@ Route::group(['middleware' => ['auth:web', 'verified', 'check_role:instructor'],
     Route::get('/dashboard', [InstructorDashboardController::class, 'index'])->name('dashboard');
 });
 
-Route::get('admin/dashboard', function () {
-    return view('admin.dashboard');
-})->middleware(['auth:admin', 'verified'])->name('admin.dashboard');
+/*
+============================================================
+=                     Auth Route                           =
+============================================================
+*/
 
 require __DIR__ . '/auth.php';
 

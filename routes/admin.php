@@ -11,7 +11,17 @@ use App\Http\Controllers\Admin\Auth\PasswordController;
 use App\Http\Controllers\Admin\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Admin\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\Auth\VerifyEmailController;
+use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Support\Facades\Route;
+
+/*
+============================================================
+=                 Admin Guest Authentication               =
+=  These routes are for admins who are NOT logged in yet.  =
+=  Includes register, login, forgot password, and reset.   =
+============================================================
+*/
+
 
 Route::group(["middleware" => "guest:admin", "prefix" => "admin", "as" => "admin."], function () {
     // "guest" means these routes are accessible only to users who are not logged in.
@@ -24,9 +34,17 @@ Route::group(["middleware" => "guest:admin", "prefix" => "admin", "as" => "admin
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
     Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
-    // Difference between store and create is that store handles the form submission for resetting the password, while create displays the form to reset the password.
+    // `create` shows the reset password form, `store` saves the new password from the form.
 
 });
+
+/*
+============================================================
+=                  Admin Authentication Routes             =
+=  These routes handle email verification, password reset, =
+=  password confirmation, and admin logout functionality.  =
+============================================================
+*/
 
 Route::group(["middleware" => "auth:admin", "prefix" => "admin", "as" => "admin."], function () {
     // "middleware('auth')"----> auth middleware give access to the following routes only to authenticated users.
@@ -39,4 +57,12 @@ Route::group(["middleware" => "auth:admin", "prefix" => "admin", "as" => "admin.
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+    /*
+    ============================================================
+    =                     Admin Dashboard Route                =
+    ============================================================
+    */
+
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
